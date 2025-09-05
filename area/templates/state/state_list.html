@@ -1,0 +1,95 @@
+{% if states %}
+{% for state in states %}
+<tr>
+  <td>{{ forloop.counter }}</td>
+  <td>{{ state.country.name }}</td>
+  <td>{{ state.name }}</td>
+  <td>{{ state.created_at|date:"d M Y H:i" }}</td>
+  <td>
+    {% if state.status %}
+      <span class="badge bg-success">Active</span>
+    {% else %}
+      <span class="badge bg-danger">Inactive</span>
+    {% endif %}
+  </td>
+  <td>
+    <button class="btn btn-sm btn-outline-primary"
+      data-bs-toggle="modal" data-bs-target="#stateEditModal-{{ state.id }}"
+      hx-get="{% url 'get_state_details' %}" 
+      hx-vals='{"get_edit":"{{ state.id }}"}'
+      hx-target="#stateEdit_form-{{ state.id }}">
+      <i class="bi bi-pencil-square"></i>
+    </button>
+
+    <button class="btn btn-sm btn-outline-danger"
+      data-bs-toggle="modal" data-bs-target="#stateDeleteModal-{{ state.id }}"
+      hx-get="{% url 'get_state_details' %}" 
+      hx-vals='{"get_delete":"{{ state.id }}"}'
+      hx-target="#stateDelete_form-{{ state.id }}">
+      <i class="bi bi-trash"></i>
+    </button>
+  </td>
+</tr>
+
+<!-- Edit Modal -->
+<div id="stateEditModal-{{ state.id }}" class="modal fade">
+  <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-content" id="stateEdit_form-{{ state.id }}">
+      <!-- loaded via htmx -->
+    </div>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div id="stateDeleteModal-{{ state.id }}" class="modal fade">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content" id="stateDelete_form-{{ state.id }}">
+      <!-- loaded via htmx -->
+    </div>
+  </div>
+</div>
+{% endfor %}
+{% else %}
+  
+   <p class="text-danger"> No State Records found. Please add a record using the button above! </p>
+  
+{% endif %}
+
+
+<!-- Pagination -->
+{% if states.has_other_pages %}
+<div class="d-flex justify-content-center mt-4" id="pagination_div"  hx-swap-oob="true">
+<nav aria-label="..." >
+    <ul class="pagination pagination-sm">
+        {% if states.has_previous %}
+        <li class="page-item">
+            <a class="page-link"
+               hx-get="{% url 'get_state_details' %}?page={{ states.previous_page_number }}"
+               hx-target="#state_data" hx-swap="innerHTML">Previous</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">Previous</span></li>
+        {% endif %}
+
+        {% for i in states.paginator.page_range %}
+        <li class="page-item {% if i == states.number %}active{% endif %}">
+            <a class="page-link"
+               hx-get="{% url 'get_state_details' %}?page={{ i }}"
+               hx-target="#state_data" hx-swap="innerHTML">{{ i }}</a>
+        </li>
+        {% endfor %}
+
+        {% if states.has_next %}
+        <li class="page-item">
+            <a class="page-link"
+               hx-get="{% url 'get_state_details' %}?page={{ states.next_page_number }}"
+               hx-target="#state_data" hx-swap="innerHTML">Next</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">Next</span></li>
+        {% endif %}
+    </ul>
+</nav>
+</div>
+{% endif %}
+

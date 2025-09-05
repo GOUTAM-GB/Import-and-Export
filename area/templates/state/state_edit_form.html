@@ -1,0 +1,44 @@
+<div class="modal-header" style="background-color:#0c768a;">
+  <h6 class="modal-title text-white">Edit State</h6>
+  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+
+<form method="POST" action="{% url 'edit_state' state.id %}">
+  {% csrf_token %}
+  <div class="modal-body py-3 px-4">
+
+    <div class="mb-3">
+      <label class="form-label">Country</label>
+      <select class="form-select" id="editCountrySelect-{{ state.id }}" name="country">
+        <!-- will be filled via AJAX -->
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">State Name</label>
+      <input type="text" class="form-control" name="name" value="{{ state.name }}">
+    </div>
+
+  </div>
+  <div class="modal-footer py-2">
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+    <button type="submit" class="btn btn-sm btn-primary">Save</button>
+  </div>
+</form>
+
+<script>
+  // load countries when edit modal is shown
+  loadCountries("#editCountrySelect-{{ state.id }}", "{{ state.country.id }}");
+
+  function loadCountries(target, selectedId = null) {
+    fetch("{% url 'get_countries_ajax' %}")
+      .then(response => response.text())
+      .then(data => {
+        const select = document.querySelector(target);
+        select.innerHTML = data;
+        if (selectedId) {
+          select.value = selectedId; // preselect current country
+        }
+      });
+  }
+</script>

@@ -1,0 +1,16 @@
+<div class="modal-header bg-danger">
+  <h6 class="modal-title text-white">Delete State</h6>
+  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+<div class="modal-body text-center py-4">
+  <i class="bi bi-exclamation-triangle display-5 text-danger"></i>
+  <p class="mt-3">Do you really want to delete</p>
+  <strong class="text-danger">"{{ state.name }}"</strong> ({{ state.country.name }})?
+</div>
+<div class="modal-footer justify-content-center py-2">
+  <form method="POST" action="{% url 'delete_state' state.id %}">
+    {% csrf_token %}
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+    <button type="submit" class="btn btn-sm btn-danger">Yes, Delete</button>
+  </form>
+</div>

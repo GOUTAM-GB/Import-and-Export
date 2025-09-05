@@ -1,0 +1,95 @@
+{% if countries %}
+{% for country in countries %}
+<tr style="height:25px;">
+  <th scope="row">{{ forloop.counter }}</th>
+  <td class="text-start">{{ country.name }}</td>
+  <td class="text-start">{{ country.created_at | date:"d M Y H:i" }}</td>
+  <td class="text-start">
+    {% if country.status %}
+      <span class="badge bg-success">Active</span>
+    {% else %}
+      <span class="badge bg-danger">Inactive</span>
+    {% endif %}
+  </td>
+  
+  <td>
+    <!-- Edit button -->
+    <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"
+      data-bs-target="#countryEditModal-{{ country.id }}" 
+      hx-get="{% url 'get_country_details' %}" hx-trigger="click"
+      hx-vals='{"get_edit":"{{ country.id }}"}' hx-target="#countryEdit_form-{{ country.id }}">
+      <i class="bi bi-pencil-square"></i>
+    </button>
+
+    <!-- Delete button -->
+    <button type="button" class="btn btn-sm btn-outline-danger" data-bs-toggle="modal"
+      data-bs-target="#countryDeleteModal-{{country.id}}" 
+      hx-get="{% url 'get_country_details' %}" hx-trigger="click"
+      hx-vals='{"get_delete":"{{ country.id }}"}' hx-target="#countryDelete_form-{{ country.id }}">
+      <i class="bi bi-trash"></i>
+    </button>
+  </td>
+</tr>
+
+<!-- Edit Modal -->
+<div id="countryEditModal-{{ country.id }}" class="modal fade" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-md">
+    <div class="modal-content rounded-3 shadow-lg" id="countryEdit_form-{{ country.id }}">
+      <!-- Loaded via HTMX -->
+    </div>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div class="modal fade" id="countryDeleteModal-{{country.id}}" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-sm">
+    <div class="modal-content rounded-3 shadow-lg" id="countryDelete_form-{{ country.id }}">
+      <!-- Loaded via HTMX -->
+    </div>
+  </div>
+</div>
+
+{% endfor %}
+{% else %}
+  
+   <p class="text-danger"> No country Records found. Please add a record using the button above! </p>
+  
+{% endif %}
+
+
+<!-- Pagination -->
+{% if countries.has_other_pages %}
+<div class="d-flex justify-content-center mt-4" id="pagination_div"  hx-swap-oob="true">
+<nav aria-label="..." >
+    <ul class="pagination pagination-sm">
+        {% if countries.has_previous %}
+        <li class="page-item">
+            <a class="page-link"
+               hx-get="{% url 'get_country_details' %}?page={{ countries.previous_page_number }}"
+               hx-target="#country_data" hx-swap="innerHTML">Previous</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">Previous</span></li>
+        {% endif %}
+
+        {% for i in countries.paginator.page_range %}
+        <li class="page-item {% if i == countries.number %}active{% endif %}">
+            <a class="page-link"
+               hx-get="{% url 'get_country_details' %}?page={{ i }}"
+               hx-target="#country_data" hx-swap="innerHTML">{{ i }}</a>
+        </li>
+        {% endfor %}
+
+        {% if countries.has_next %}
+        <li class="page-item">
+            <a class="page-link"
+               hx-get="{% url 'get_country_details' %}?page={{ countries.next_page_number }}"
+               hx-target="#country_data" hx-swap="innerHTML">Next</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">Next</span></li>
+        {% endif %}
+    </ul>
+</nav>
+</div>
+{% endif %}
