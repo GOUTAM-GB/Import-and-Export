@@ -170,4 +170,74 @@ def get_countries_ajax(request):
 # City view
 
 def city_view(request):
-    return render(request, 'city.html')
+    if request.method == "POST":
+        country_id = request.POST.get("country")
+        state_id = request.POST.get("state")
+        name = request.POST.get("name")
+        if country_id and state_id and name:
+            country = get_object_or_404(Country, id=country_id)
+            state = get_object_or_404(State, id=state_id, country=country)
+            City.objects.create(name=name, country=country, state=state)
+        return redirect("city")
+    return render(request, "city.html")
+
+def get_city_details(request):
+    """HTMX load city list, edit form, delete form"""
+    if request.headers.get("HX-Request"):
+        try:
+            search = request.GET.get("q")
+            get_edit = request.GET.get("get_edit")
+            get_delete = request.GET.get("get_delete")
+
+            if get_edit:
+                city = get_object_or_404(City, id=get_edit)
+                return render(request, "city/city_edit_form.html", {"city": city})
+
+            if get_delete:
+                city = get_object_or_404(City, id=get_delete)
+                return render(request, "city/city_delete_form.html", {"city": city})
+
+            if search:
+                cities = City.objects.filter(Q(name__icontains=search))
+            else:
+                cities = City.objects.select_related("country", "state").order_by("-created_at")
+
+            page_num = request.GET.get("page")
+            paginator = Paginator(cities, 2)
+            try:
+                cities = paginator.page(page_num)
+            except PageNotAnInteger:
+                cities = paginator.page(1)
+            except EmptyPage:
+                cities = None
+
+            return render(request, "city/city_list.html", {"cities": cities})
+        except Exception as e:
+            return HttpResponse(f"Error loading data: {str(e)}", e)
+        
+def edit_city(request, id):
+    city = get_object_or_404(City, id=id)
+    if request.method == "POST":
+        country_id = request.POST.get("country")
+        state_id = request.POST.get("state")
+        name = request.POST.get("name")
+        if country_id and state_id and name:
+            country = get_object_or_404(Country, id=country_id)
+            state = get_object_or_404(State, id=state_id, country=country)
+            city.country = country
+            city.state = state
+            city.name = name
+            city.save()
+        return redirect("city")
+
+def delete_city(request, id):
+    city = get_object_or_404(City, id=id)
+    if request.method == "POST":
+        city.delete()
+        return redirect("city")
+    
+def get_states_ajax(request, country_id):
+    
+    states = State.objects.filter(country_id=country_id, status=True).order_by("name")
+    options = "".join([f'<option value="{s.id}">{s.name}</option>' for s in states])
+    return HttpResponse(options)

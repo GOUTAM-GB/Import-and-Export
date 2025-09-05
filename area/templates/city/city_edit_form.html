@@ -1,0 +1,36 @@
+<div class="modal-header" style="background-color:#0c768a;">
+  <h6 class="modal-title text-white">Edit City</h6>
+  <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+</div>
+
+<form method="POST" action="{% url 'edit_city' city.id %}">
+  {% csrf_token %}
+  <div class="modal-body py-3 px-4">
+
+    <div class="mb-3">
+      <label class="form-label">Country</label>
+      <select class="form-select" id="editCityCountry-{{ city.id }}" name="country"
+        onchange="loadStates(this.value, '#editCityState-{{ city.id }}', '{{ city.state.id }}')">
+      </select>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">State</label>
+      <select class="form-select" id="editCityState-{{ city.id }}" name="state"></select>
+    </div>
+
+    <div class="mb-3">
+      <label class="form-label">City Name</label>
+      <input type="text" class="form-control" name="name" value="{{ city.name }}">
+    </div>
+
+  </div>
+  <div class="modal-footer py-2">
+    <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+    <button type="submit" class="btn btn-sm btn-primary">Save</button>
+  </div>
+</form>
+
+<script>
+  loadCountries("#editCityCountry-{{ city.id }}", "{{ city.country.id }}");
+</script>

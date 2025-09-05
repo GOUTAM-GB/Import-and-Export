@@ -2,6 +2,7 @@ from django.urls import path
 from .views import *
 urlpatterns = [
     path('', home, name='home'),
+    
     path('country/', country_view, name='country'),
     path('country/details/',get_country_details,name='get_country_details'),
     path('country/edit/<int:id>/',edit_country, name='edit_country'),
@@ -13,5 +14,9 @@ urlpatterns = [
     path('state/edit/<int:id>/',edit_state, name='edit_state'),
     path('state/delete/<int:id>/',delete_state, name='delete_state'),
     
-    path('city/', city_view, name='city')
+    path('city/', city_view, name='city'),
+    path('get_states_ajax/<int:country_id>/', get_states_ajax, name='get_states_ajax'),
+    path('city/details/',get_city_details, name='get_city_details'),
+    path('city/edit/<int:id>/', edit_city, name='edit_city'),
+    path('city/delete/<int:id>/',delete_city, name='delete_city'),
 ]

@@ -1,177 +1,117 @@
-{% extends 'base.html'%}
+{% extends 'base.html' %}
 {% load static %}
+{% block title %}City{% endblock %}
 {% block content %}
-
-<style>
-  thead th {
-    color: white !important;
-  }
-
-  .form-label::after {
-    content: '*';
-    color: red;
-  }
-</style>
 
 <div class="container mt-4" style="max-width: calc(100% - 100px);">
 
-  <!-- Top bar: Search + Add Student -->
+  <!-- Top bar -->
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <!-- Left: Add Student button -->
-    <button class="btn text-white" style="background-color: #0c768a;" data-bs-toggle="modal"
-      data-bs-target="#addStudentModal">
+    <button class="btn text-white" style="background-color: #0c768a;"
+      data-bs-toggle="modal" data-bs-target="#addCityModal"
+      onclick="loadCountries('#cityCountrySelect')">
       + Add City
     </button>
 
-    <!-- Right: Search bar (smaller width) -->
     <div class="search-box" style="max-width: 400px; width: 100%;">
-      <input type="text" class="form-control" placeholder="Search students..." name="q"
-        
-         style="border-radius: 10px; padding-left: 15px; height: 38px; background-color: #f9f9f9;">
-
+      <input type="text" class="form-control" placeholder="Search Cities..." name="q"
+        hx-get="{% url 'get_city_details' %}" hx-target="#city_data">
     </div>
   </div>
 
-  
   <div class="table-responsive">
     <table class="table table-bordered table-striped align-middle text-center">
-      <thead style="background-color: #0c768a; ">
+      <thead style="background-color: #0c768a; color:white;">
         <tr>
-          <th scope="col">Sl no.</th>
-          <th scope="col">Name</th>
-          <th scope="col">Email</th>
-          <th scope="col">Contact No</th>
-          <th scope="col">College</th>
-          <th scope="col">Branch</th>
-          <th scope="col">Operation</th>
+          <th>Sl no.</th>
+          <th>Country</th>
+          <th>State</th>
+          <th>City</th>
+          <th>Created at</th>
+          <th>Status</th>
+          <th>Operation</th>
         </tr>
       </thead>
-      <tbody id="student_data" >
-        <!-- content will be loaded via htmx -->
+      <tbody id="city_data"
+        hx-get="{% url 'get_city_details' %}" 
+        hx-target="this" 
+        hx-trigger="load once" 
+        hx-swap="innerHTML">
+        <!-- list via htmx -->
       </tbody>
     </table>
     <div class="d-flex justify-content-center mt-4" id="pagination_div">
-      <!-- pagination will loaded here  -->
+      <!-- pagination -->
     </div>
   </div>
- 
 
-
-  <!-- Add Student Modal -->
-  <div class="modal fade" id="addStudentModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-lg modal-dialog-centered">
+  <!-- Add City Modal -->
+  <div class="modal fade" id="addCityModal" tabindex="-1">
+    <div class="modal-dialog modal-md modal-dialog-centered">
       <div class="modal-content rounded-3 shadow-lg">
-        <!-- Modal Header -->
         <div class="modal-header" style="background-color: #0c768a;">
-          <h5 class="modal-title text-white">Add New Student</h5>
+          <h6 class="modal-title text-white">Add New City</h6>
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
 
-        <!-- Form -->
-        <form id="addStudentForm" method="POST" enctype="multipart/form-data">
+        <form method="POST">
           {% csrf_token %}
-          <div class="modal-body">
-            <div class="row g-3">
+          <div class="modal-body py-3 px-4">
 
-              <!-- Name -->
-              <div class="col-md-6">
-                <label class="form-label">Full Name</label>
-                <input type="text" class="form-control" id="name" name="name"
-                  placeholder="Enter full name ex- Jhon Snow">
-                <small id="nameError" class="text-danger"></small>
-              </div>
-
-              <!-- Email -->
-              <div class="col-md-6">
-                <label class="form-label">Email</label>
-                <input type="email" class="form-control" id="email" name="email"
-                  placeholder="Enter email address ex-jhonsnow@gmial">
-                <small id="emailError" class="text-danger"></small>
-              </div>
-
-              <!-- Gender -->
-              <div class="col-md-6">
-                <label class="form-label">Gender</label>
-                <select class="form-select" id="gender" name="gender">
-                  <option value="" disabled selected>Select gender</option>
-                  <option value="M">Male</option>
-                  <option value="F">Female</option>
-                  <option value="O">Other</option>
-                </select>
-                <small id="genderError" class="text-danger"></small>
-              </div>
-
-              <!-- Contact -->
-              <div class="col-md-6">
-                <label class="form-label">Contact No</label>
-                <input type="number" class="form-control" id="contactNo" name="contactNo"
-                  placeholder="Enter contact number">
-                <small id="contactNoError" class="text-danger"></small>
-              </div>
-
-              <!-- College -->
-              <div class="col-md-6">
-                <label class="form-label">College</label>
-                <select class="form-select" id="college" name="college">
-                  <option value="" disabled selected>Select College</option>
-                 
-                </select>
-                <small id="collegeError" class="text-danger"></small>
-
-              </div>
-
-              <!-- Branch -->
-              <div class="col-md-6">
-                <label class="form-label">Branch</label>
-                <select class="form-select" id="branch" name="branch">
-                  <option value="" >Select Branch</option>
-                </select>
-                <small id="branchError" class="text-danger"></small>
-              </div>
-
-
-              <!-- Address -->
-              <div class="col-md-12">
-                <label class="form-label">Address</label>
-                <textarea class="form-control" id="address" name="address" rows="2"
-                  placeholder="Enter full address"></textarea>
-                <small id="addressError" class="text-danger"></small>
-              </div>
-
-              <!-- Profile Pic -->
-              <div class="col-md-12">
-                <label class="form-label">Profile Picture</label>
-                <input type="file" id="profilepic" name="profilepic" class="form-control"
-                  placeholder="upload JPG,PNG, or JPEG">
-                <small id="profilepicError" class="text-danger"></small>
-              </div>
-
+            <div class="mb-3">
+              <label class="form-label">Country</label>
+              <select class="form-select" id="cityCountrySelect" name="country"
+                onchange="loadStates(this.value, '#cityStateSelect')">
+                <!-- loaded via ajax -->
+              </select>
             </div>
-          </div>
 
-          <!-- Footer -->
-          <center class="mb-2">
-            <button type="submit" class="btn" style="background-color: #0c768a; color:#fff;">Add Student</button>
-            <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-          </center>
+            <div class="mb-3">
+              <label class="form-label">State</label>
+              <select class="form-select" id="cityStateSelect" name="state">
+                <!-- loaded via ajax -->
+              </select>
+            </div>
+
+            <div class="mb-3">
+              <label class="form-label">City Name</label>
+              <input type="text" class="form-control" name="name" placeholder="Enter city name">
+            </div>
+
+          </div>
+          <div class="modal-footer py-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-sm text-white" style="background-color: #0c768a;">Add City</button>
+          </div>
         </form>
       </div>
     </div>
   </div>
-  <!-- End of Add Student Modal -->
-
 
 </div>
 
-
-
 <script>
+function loadCountries(target, selectedId=null) {
+  fetch("{% url 'get_countries_ajax' %}")
+    .then(response => response.text())
+    .then(data => {
+      const select = document.querySelector(target);
+      select.innerHTML = data;
+      if (selectedId) select.value = selectedId;
+      select.dispatchEvent(new Event("change")); // trigger state load
+    });
+}
 
- 
-
+function loadStates(countryId, target, selectedId=null) {
+  if (!countryId) return;
+  fetch(`/get_states_ajax/${countryId}/`)   // <-- use underscore not hyphen
+    .then(response => response.text())
+    .then(data => {
+      const select = document.querySelector(target);
+      select.innerHTML = '<option value="">Select State</option>' + data;
+      if (selectedId) select.value = selectedId;
+    });
+}
 </script>
-
-<script src="{% static 'assets/js/custom_validation.js' %}"></script>
-
 
 {% endblock %}

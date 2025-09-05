@@ -1,0 +1,96 @@
+{% if cities %}
+{% for city in cities %}
+<tr>
+  <td>{{ forloop.counter }}</td>
+  <td>{{ city.country.name }}</td>
+  <td>{{ city.state.name }}</td>
+  <td>{{ city.name }}</td>
+  <td>{{ city.created_at|date:"d M Y H:i" }}</td>
+  <td>
+    {% if city.status %}
+      <span class="badge bg-success">Active</span>
+    {% else %}
+      <span class="badge bg-danger">Inactive</span>
+    {% endif %}
+  </td>
+  <td>
+    <!-- Edit -->
+    <button class="btn btn-sm btn-outline-primary"
+      data-bs-toggle="modal" data-bs-target="#cityEditModal-{{ city.id }}"
+      hx-get="{% url 'get_city_details' %}" 
+      hx-vals='{"get_edit":"{{ city.id }}"}'
+      hx-target="#cityEdit_form-{{ city.id }}">
+      <i class="bi bi-pencil-square"></i>
+    </button>
+    <!-- Delete -->
+    <button class="btn btn-sm btn-outline-danger"
+      data-bs-toggle="modal" data-bs-target="#cityDeleteModal-{{ city.id }}"
+      hx-get="{% url 'get_city_details' %}" 
+      hx-vals='{"get_delete":"{{ city.id }}"}'
+      hx-target="#cityDelete_form-{{ city.id }}">
+      <i class="bi bi-trash"></i>
+    </button>
+  </td>
+</tr>
+
+<!-- Edit Modal -->
+<div id="cityEditModal-{{ city.id }}" class="modal fade">
+  <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-content" id="cityEdit_form-{{ city.id }}">
+      <!-- loaded via htmx -->
+    </div>
+  </div>
+</div>
+
+<!-- Delete Modal -->
+<div id="cityDeleteModal-{{ city.id }}" class="modal fade">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content" id="cityDelete_form-{{ city.id }}">
+      <!-- loaded via htmx -->
+    </div>
+  </div>
+</div>
+
+{% endfor %}
+{% else %}
+<tr><td colspan="7"><p class="text-danger">No City Records found!</p></td></tr>
+{% endif %}
+
+<!-- Pagination -->
+{% if cities.has_other_pages %}
+<div class="d-flex justify-content-center mt-4" id="pagination_div"  hx-swap-oob="true">
+<nav aria-label="..." >
+    <ul class="pagination pagination-sm">
+        {% if cities.has_previous %}
+        <li class="page-item">
+            <a class="page-link"
+               hx-get="{% url 'get_city_details' %}?page={{ cities.previous_page_number }}"
+               hx-target="#city_data" hx-swap="innerHTML">Previous</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">Previous</span></li>
+        {% endif %}
+
+        {% for i in cities.paginator.page_range %}
+        <li class="page-item {% if i == cities.number %}active{% endif %}">
+            <a class="page-link"
+               hx-get="{% url 'get_city_details' %}?page={{ i }}"
+               hx-target="#city_data" hx-swap="innerHTML">{{ i }}</a>
+        </li>
+        {% endfor %}
+
+        {% if cities.has_next %}
+        <li class="page-item">
+            <a class="page-link"
+               hx-get="{% url 'get_city_details' %}?page={{ cities.next_page_number }}"
+               hx-target="#city_data" hx-swap="innerHTML">Next</a>
+        </li>
+        {% else %}
+        <li class="page-item disabled"><span class="page-link">Next</span></li>
+        {% endif %}
+    </ul>
+</nav>
+</div>
+{% endif %}
+
+
