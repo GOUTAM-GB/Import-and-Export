@@ -88,6 +88,46 @@
 </div>
 <!-- End of Add Country Modal -->
 
+<!-- Import Modal -->
+<div class="modal fade" id="importCountryModal" tabindex="-1">
+  <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header" style="background-color:#0c768a;">
+        <h6 class="modal-title text-white">Import Countries (CSV only)</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <form method="POST" enctype="multipart/form-data" action="#">
+        {% csrf_token %}
+        <div class="modal-body">
+          <input type="file" class="form-control" name="csv_file" accept=".csv" required>
+        </div>
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-primary btn-sm">Upload</button>
+          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+<!-- Import modal ends here  -->
+
+<!-- Export Modal -->
+<div class="modal fade" id="exportCountryModal" tabindex="-1">
+  <div class="modal-dialog modal-sm modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header" style="background-color:#0c768a;">
+        <h6 class="modal-title text-white">Export Countries</h6>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body text-center">
+        <a href="#" class="btn btn-sm btn-outline-primary">Export as CSV</a>
+        <a href="#" class="btn btn-sm btn-outline-danger">Export as PDF</a>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- Export modal ends here  -->
+
 </div>
 
 {% endblock %}

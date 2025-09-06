@@ -1,6 +1,18 @@
 {% extends 'base.html' %}
 {% load static %}
 {% block title %}City{% endblock %}
+{% block style %}
+<style>
+  thead th {
+    color: white !important;
+  }
+
+  .form-label::after {
+    content: '*';
+    color: red;
+  }
+</style>
+{% endblock %}
 {% block content %}
 
 <div class="container mt-4" style="max-width: calc(100% - 100px);">
