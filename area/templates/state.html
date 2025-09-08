@@ -11,6 +11,9 @@
     content: '*';
     color: red;
   }
+   .uppercase {
+  text-transform: uppercase;
+}
 </style>
 {% endblock %}
 {% block content %}
@@ -51,6 +54,24 @@
     </div>
   </div>
 
+  <!-- Toast container -->
+<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
+  {% if messages %}
+    {% for message in messages %}
+      <div class="toast align-items-center text-white {% if message.tags == 'error' %} bg-danger {% elif message.tags == 'success' %} bg-success {% else %} bg-info {% endif %} border-0"
+           role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="3000">
+        <div class="d-flex">
+          <div class="toast-body">
+            {{ message }}
+          </div>
+          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+                  aria-label="Close"></button>
+        </div>
+      </div>
+    {% endfor %}
+  {% endif %}
+</div>
+
   <!-- Add State Modal -->
   <div class="modal fade" id="addStateModal" tabindex="-1">
     <div class="modal-dialog modal-md modal-dialog-centered">
@@ -60,20 +81,23 @@
           <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
         </div>
 
-        <form id="addStateForm" method="POST">
+        <form id="stateValidationForm" method="POST">
           {% csrf_token %}
           <div class="modal-body py-3 px-4">
 
             <div class="mb-3">
               <label class="form-label">Country</label>
               <select class="form-select" id="countrySelect" name="country">
+                <option value="" disabled selected>-- Select Country --</option>
                 <!-- filled by ajax -->
               </select>
+              <small id="countryError" class="text-danger"></small>
             </div>
 
             <div class="mb-3">
               <label class="form-label">State Name</label>
-              <input type="text" class="form-control" name="name" placeholder="Enter state name">
+              <input type="text" class="form-control" name="name" placeholder="Ex: Telengana" id="name">
+              <small id="nameError" class="text-danger"></small>
             </div>
 
           </div>
@@ -97,4 +121,92 @@ function loadCountries(target) {
 }
 </script>
 
+{% endblock %}
+
+
+{% block script %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var toastElList = [].slice.call(document.querySelectorAll('.toast'))
+    toastElList.map(function (toastEl) {
+      var toast = new bootstrap.Toast(toastEl)
+      toast.show()
+    })
+  });
+
+
+$("#stateValidationForm").validate({
+  ignore: [],   
+  errorElement: 'label',
+  rules: {
+    name: {
+      required: true,
+      minlength: 4,
+      maxlength: 30
+    },
+   
+  },
+  messages: {
+    name: {
+      required: "Please enter state name!",
+      minlength: "Please give minimum 4 characters",
+      maxlength: "Max it should be 30 characters"
+    },
+   
+  },
+  errorPlacement: function (error, element) {
+    var fieldName = element.attr("name");
+    var $small = $("#" + fieldName + "Error");
+    if ($small.length) {
+      $small.text(error.text());
+    } else {
+      error.insertAfter(element);
+    }
+  },
+  submitHandler: function (form) {
+    form.submit();
+  }
+});
+
+// state edit form validation 
+  document.body.addEventListener("htmx:afterSwap", function(evt) {
+  // Check if the swap was into an edit modal
+  if (evt.detail.target.id.startsWith("stateEdit_form-")) {
+    const form = evt.detail.target.querySelector("form");
+    if (form) {
+      $(form).validate({
+        errorElement: 'label',
+        rules: {
+          name: {
+            required: true,
+            minlength: 2,
+            maxlength: 30
+          }
+        },
+        messages: {
+          name: {
+            required: "Please enter state!",
+            minlength: "Please give minimum 2 characters",
+            maxlength: "Max it should be 30 characters"
+          }
+        },
+        errorPlacement: function (error, element) {
+          var fieldName = element.attr("name");
+          var $small = $(form).find(`#${fieldName}Error-${form.id.split('-')[1]}`);
+          if ($small.length) {
+            $small.text(error.text());
+          } else {
+            error.insertAfter(element);
+          }
+        },
+        submitHandler: function (form) {
+          form.submit();
+        }
+      });
+    }
+  }
+});
+
+</script>
+<script src="{% static 'assets/js/custom_validation.js' %}"></script>
 {% endblock %}

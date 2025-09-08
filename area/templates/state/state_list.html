@@ -2,16 +2,10 @@
 {% for state in states %}
 <tr>
   <td>{{ forloop.counter }}</td>
-  <td>{{ state.country.name }}</td>
-  <td>{{ state.name }}</td>
+  <td class="text-start uppercase">{{ state.country.name }}</td>
+  <td class="text-start uppercase">{{ state.name }}</td>
   <td>{{ state.created_at|date:"d M Y H:i" }}</td>
-  <td>
-    {% if state.status %}
-      <span class="badge bg-success">Active</span>
-    {% else %}
-      <span class="badge bg-danger">Inactive</span>
-    {% endif %}
-  </td>
+  {% include "state/state_status.html" with state=state %}
   <td>
     <button class="btn btn-sm btn-outline-primary"
       data-bs-toggle="modal" data-bs-target="#stateEditModal-{{ state.id }}"

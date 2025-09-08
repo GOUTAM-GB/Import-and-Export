@@ -3,17 +3,16 @@
   <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 
-<form id="editcountryForm" method="POST" action="{% url 'edit_country' country.id %}">
+<form id="editcountryForm-{{ country.id }}" method="POST" action="{% url 'edit_country' country.id %}">
   {% csrf_token %}
   <div class="modal-body py-3 px-4">
-
     <div class="mb-3 text-start">
       <label class="form-label">Name:</label>
-      <input type="text" class="form-control" name="name" value="{{ country.name }}">
+      <input type="text" class="form-control" name="name"
+             value="{{ country.name }}" placeholder="Ex: India" id="edit_name-{{ country.id }}">
+      <small id="nameError-{{ country.id }}" class="text-danger"></small>
     </div>
-
   </div>
-
   <div class="modal-footer py-2">
     <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Close</button>
     <button type="submit" class="btn btn-sm btn-primary">Save Changes</button>

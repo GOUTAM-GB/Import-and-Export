@@ -3,7 +3,7 @@
   <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
 </div>
 
-<form method="POST" action="{% url 'edit_city' city.id %}">
+<form method="POST" action="{% url 'edit_city' city.id %}" id="editcityForm-{{ city.id }}">
   {% csrf_token %}
   <div class="modal-body py-3 px-4">
 
@@ -21,7 +21,8 @@
 
     <div class="mb-3">
       <label class="form-label">City Name</label>
-      <input type="text" class="form-control" name="name" value="{{ city.name }}">
+      <input type="text" class="form-control" name="name" value="{{ city.name }}" id="edit_name-{{ city.id }}" placeholder="EX: Hyderabad" >
+      <small id="nameError-{{ city.id }}" class="text-danger"></small>
     </div>
 
   </div>

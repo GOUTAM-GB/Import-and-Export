@@ -7,9 +7,8 @@
     color: white !important;
   }
 
-  .form-label::after {
-    content: '*';
-    color: red;
+  .uppercase {
+    text-transform: uppercase;
   }
 </style>
 
@@ -25,9 +24,9 @@
 
     <!-- Right: Search bar (smaller width) -->
     <div class="search-box" style="max-width: 400px; width: 100%;">
-      <input type="text" class="form-control" placeholder="Search students..." name="q" hx-get="{% url 'get_country_details' %}"
-      hx-target="#country_data" 
-         style="border-radius: 10px; padding-left: 15px; height: 38px; background-color: #f9f9f9;">
+      <input type="text" class="form-control" placeholder="Search students..." name="q"
+        hx-get="{% url 'get_country_details' %}" hx-target="#country_data"
+        style="border-radius: 10px; padding-left: 15px; height: 38px; background-color: #f9f9f9;">
 
     </div>
   </div>
@@ -43,7 +42,8 @@
           <th scope="col">Operation</th>
         </tr>
       </thead>
-      <tbody id="country_data" hx-get="{% url 'get_country_details' %}" hx-trigger="load once" hx-target="this" hx-swap="innerHTML">
+      <tbody id="country_data" hx-get="{% url 'get_country_details' %}" hx-trigger="load once" hx-target="this"
+        hx-swap="innerHTML">
         <!-- content will be loaded via htmx -->
       </tbody>
     </table>
@@ -51,83 +51,144 @@
       <!-- pagination will loaded here  -->
     </div>
   </div>
- 
 
+
+  <!-- Toast container -->
+  <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
+    {% if messages %}
+    {% for message in messages %}
+    <div
+      class="toast align-items-center text-white {% if message.tags == 'error' %} bg-danger {% elif message.tags == 'success' %} bg-success {% else %} bg-info {% endif %} border-0"
+      role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="3000">
+      <div class="d-flex">
+        <div class="toast-body">
+          {{ message }}
+        </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+          aria-label="Close"></button>
+      </div>
+    </div>
+    {% endfor %}
+    {% endif %}
+  </div>
 
   <!-- Add Country Modal -->
-<div class="modal fade" id="addCountryModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-md">
-    <div class="modal-content rounded-3 shadow-lg">
-      
-      <!-- Modal Header -->
-      <div class="modal-header" style="background-color: #0c768a;">
-        <h6 class="modal-title text-white">Add New Country</h6>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
+  <div class="modal fade" id="addCountryModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-md">
+      <div class="modal-content rounded-3 shadow-lg">
 
-      <!-- Form -->
-      <form id="addCountryForm" method="POST">
-        {% csrf_token %}
-        <div class="modal-body py-3 px-4">
-          <div class="mb-3">
-            <label class="form-label">Country Name <span class="text-danger">*</span></label>
-            <input type="text" class="form-control" id="name" name="country"
-                   placeholder="Enter country name">
-            <small id="countryError" class="text-danger"></small>
+        <!-- Modal Header -->
+        <div class="modal-header" style="background-color: #0c768a;">
+          <h6 class="modal-title text-white">Add New Country</h6>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+
+        <!-- Form -->
+        <form id="countryValidationForm" method="POST">
+          {% csrf_token %}
+          <div class="modal-body py-3 px-4">
+            <div class="mb-3">
+              <label class="form-label">Country Name <span class="text-danger">*</span></label>
+              <input type="text" class="form-control" id="name" name="name" placeholder="Ex: India">
+              <small id="nameError" class="text-danger"></small>
+            </div>
           </div>
-        </div>
 
-        <!-- Modal Footer -->
-        <div class="modal-footer py-2">
-          <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-sm text-white" style="background-color: #0c768a;">Add Country</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-<!-- End of Add Country Modal -->
-
-<!-- Import Modal -->
-<div class="modal fade" id="importCountryModal" tabindex="-1">
-  <div class="modal-dialog modal-md modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header" style="background-color:#0c768a;">
-        <h6 class="modal-title text-white">Import Countries (CSV only)</h6>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <form method="POST" enctype="multipart/form-data" action="#">
-        {% csrf_token %}
-        <div class="modal-body">
-          <input type="file" class="form-control" name="csv_file" accept=".csv" required>
-        </div>
-        <div class="modal-footer">
-          <button type="submit" class="btn btn-primary btn-sm">Upload</button>
-          <button type="button" class="btn btn-outline-secondary btn-sm" data-bs-dismiss="modal">Cancel</button>
-        </div>
-      </form>
-    </div>
-  </div>
-</div>
-<!-- Import modal ends here  -->
-
-<!-- Export Modal -->
-<div class="modal fade" id="exportCountryModal" tabindex="-1">
-  <div class="modal-dialog modal-sm modal-dialog-centered">
-    <div class="modal-content">
-      <div class="modal-header" style="background-color:#0c768a;">
-        <h6 class="modal-title text-white">Export Countries</h6>
-        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-      </div>
-      <div class="modal-body text-center">
-        <a href="#" class="btn btn-sm btn-outline-primary">Export as CSV</a>
-        <a href="#" class="btn btn-sm btn-outline-danger">Export as PDF</a>
+          <!-- Modal Footer -->
+          <div class="modal-footer py-2">
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-sm text-white" style="background-color: #0c768a;">Add Country</button>
+          </div>
+        </form>
       </div>
     </div>
   </div>
-</div>
-<!-- Export modal ends here  -->
+  <!-- End of Add Country Modal -->
 
 </div>
 
+{% endblock %}
+{% block script %}
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    var toastElList = [].slice.call(document.querySelectorAll('.toast'))
+    toastElList.map(function (toastEl) {
+      var toast = new bootstrap.Toast(toastEl)
+      toast.show()
+    })
+  });
+
+  // country validation 
+  $("#countryValidationForm").validate({
+    errorElement: 'label',
+    rules: {
+      name: {
+        required: true,
+        minlength: 2,
+        maxlength: 30
+      },
+    },
+    messages: {
+      name: {
+        required: "Please enter country!",
+        minlength: "Please give minimum 2 characters",
+        maxlength: "Max it should be 30 characters"
+      },
+    },
+    errorPlacement: function (error, element) {
+      var fieldName = element.attr("name");
+      var $small = $("#" + fieldName + "Error");
+      if ($small.length) {
+        $small.text(error.text());
+      } else {
+        error.insertAfter(element);
+      }
+    },
+    submitHandler: function (form) {
+      form.submit();
+    }
+  });
+
+  // country edit form validation 
+  document.body.addEventListener("htmx:afterSwap", function (evt) {
+    // Check if the swap was into an edit modal
+    if (evt.detail.target.id.startsWith("countryEdit_form-")) {
+      const form = evt.detail.target.querySelector("form");
+      if (form) {
+        $(form).validate({
+          errorElement: 'label',
+          rules: {
+            name: {
+              required: true,
+              minlength: 2,
+              maxlength: 30
+            }
+          },
+          messages: {
+            name: {
+              required: "Please enter country!",
+              minlength: "Please give minimum 2 characters",
+              maxlength: "Max it should be 30 characters"
+            }
+          },
+          errorPlacement: function (error, element) {
+            var fieldName = element.attr("name");
+            var $small = $(form).find(`#${fieldName}Error-${form.id.split('-')[1]}`);
+            if ($small.length) {
+              $small.text(error.text());
+            } else {
+              error.insertAfter(element);
+            }
+          },
+          submitHandler: function (form) {
+            form.submit();
+          }
+        });
+      }
+    }
+  });
+
+
+</script>
+<script src="{% static 'assets/js/custom_validation.js' %}"></script>
 {% endblock %}

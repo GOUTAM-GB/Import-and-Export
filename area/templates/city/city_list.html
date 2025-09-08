@@ -2,17 +2,11 @@
 {% for city in cities %}
 <tr>
   <td>{{ forloop.counter }}</td>
-  <td>{{ city.country.name }}</td>
-  <td>{{ city.state.name }}</td>
-  <td>{{ city.name }}</td>
+  <td class="text-start uppercase">{{ city.country.name }}</td>
+  <td class="text-start uppercase">{{ city.state.name }}</td>
+  <td class="text-start uppercase">{{ city.name }}</td>
   <td>{{ city.created_at|date:"d M Y H:i" }}</td>
-  <td>
-    {% if city.status %}
-      <span class="badge bg-success">Active</span>
-    {% else %}
-      <span class="badge bg-danger">Inactive</span>
-    {% endif %}
-  </td>
+  {% include "city/city_status.html" with city=city %}
   <td>
     <!-- Edit -->
     <button class="btn btn-sm btn-outline-primary"

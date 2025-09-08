@@ -6,6 +6,12 @@ class Country(models.Model):
     name = models.CharField(max_length=100, unique=True)
     created_at = models.DateTimeField(default=timezone.now)
     status = models.BooleanField(default=True)
+    def save(self, *args, **kwargs):
+        # Always store lowercase
+        if self.name:
+            self.name = self.name.lower().strip()
+        super().save(*args, **kwargs)
+
     def __str__(self):
         return self.name
 
@@ -18,6 +24,11 @@ class State(models.Model):
     name = models.CharField(max_length=100)
     created_at = models.DateTimeField(default=timezone.now)
     status = models.BooleanField(default=True)
+    def save(self, *args, **kwargs):
+        # Always store lowercase
+        if self.name:
+            self.name = self.name.lower().strip()
+        super().save(*args, **kwargs)
     
     class Meta:
         unique_together = ('country', 'name')
@@ -38,6 +49,12 @@ class City(models.Model):
     name = models.CharField(max_length=100)
     created_at = models.DateTimeField(default=timezone.now)
     status = models.BooleanField(default=True)
+    
+    def save(self, *args, **kwargs):
+        # Always store lowercase
+        if self.name:
+            self.name = self.name.lower().strip()
+        super().save(*args, **kwargs)
 
     class Meta:
         unique_together = ('state', 'name')

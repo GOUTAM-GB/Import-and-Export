@@ -2,16 +2,10 @@
 {% for country in countries %}
 <tr style="height:25px;">
   <th scope="row">{{ forloop.counter }}</th>
-  <td class="text-start">{{ country.name }}</td>
-  <td class="text-start">{{ country.created_at | date:"d M Y H:i" }}</td>
-  <td class="text-start">
-    {% if country.status %}
-      <span class="badge bg-success">Active</span>
-    {% else %}
-      <span class="badge bg-danger">Inactive</span>
-    {% endif %}
-  </td>
-  
+  <td class="text-start uppercase">{{ country.name }}</td>
+  <td >{{ country.created_at | date:"d M Y H:i" }}</td>
+
+    {% include "country/country_status.html" with country=country %}
   <td>
     <!-- Edit button -->
     <button type="button" class="btn btn-sm btn-outline-primary" data-bs-toggle="modal"

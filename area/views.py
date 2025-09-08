@@ -1,8 +1,10 @@
 from pyexpat.errors import messages
+from django.contrib import messages
 from django.shortcuts import render, redirect, get_object_or_404
 from .models import Country, State, City
 from django.core.paginator import Paginator,PageNotAnInteger,EmptyPage
 from django.db.models import Q
+from django.template.loader import render_to_string
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
 
 # Create your views here.
@@ -13,12 +15,17 @@ def home(request):
 # Country view 
 
 def country_view(request):
-    if request.method == 'POST':
-        country = request.POST.get('country')
-        Country.objects.create(name=country)
-        return redirect('country')
-        
-    return render(request, 'country.html')
+    if request.method == "POST":
+        name = request.POST.get("name", "").strip().lower()
+
+        if Country.objects.filter(name=name).exists():
+            messages.error(request, "Country already exists!")
+        else:
+            Country.objects.create(name=name)
+            messages.success(request, "Country added successfully!")
+        return redirect("country")
+
+    return render(request, "country.html")
 
 def get_country_details(request):
     if request.headers.get('HX-Request'):
@@ -26,6 +33,8 @@ def get_country_details(request):
             search = request.GET.get('q')
             get_edit = request.GET.get('get_edit')
             get_delete = request.GET.get('get_delete')
+            toggle_country_id = request.GET.get('toggle_country_id')
+            
             if get_edit:
                 country = get_object_or_404( Country, id = get_edit)
                 context = {
@@ -38,6 +47,14 @@ def get_country_details(request):
                     'country':country
                 }
                 return render(request, 'country/country_delete_form.html', context)
+            # --- Toggle status request ---
+            if toggle_country_id:
+                country = get_object_or_404(Country, id=toggle_country_id)
+                country.status = not country.status
+                country.save()
+                html = render_to_string("country/country_status.html", {"country": country})
+                return HttpResponse(html)
+            
             if search:
                 countries = Country.objects.filter(
                      Q(name__icontains=search) 
@@ -61,15 +78,16 @@ def get_country_details(request):
         
 def edit_country(request, id):
     if request.method == 'POST':
+        country = get_object_or_404(Country, id=id)
+        name = request.POST.get('name', '').strip()
         try:
-            country = get_object_or_404(Country, id=id)
-            country.name=request.POST.get('name')
-            
+            country.name = name
             country.save()
-            return redirect('country')
+            messages.success(request, "Country edited successfully!")
         except Exception as e:
             messages.error(request, f"Error updating country: {str(e)}")
-            return redirect('country')
+
+        return redirect('country')
 
 def delete_country(request, id):
     try:
@@ -77,7 +95,7 @@ def delete_country(request, id):
 
         if request.method == "POST":
             country.delete()   # ✅ fixed
-
+            messages.info(request, "country deleted successfully!")
             return redirect('country')
 
     except Exception as e:
@@ -91,10 +109,15 @@ def delete_country(request, id):
 def state_view(request):
     if request.method == "POST":
         country_id = request.POST.get("country")
-        name = request.POST.get("name")
+        name = request.POST.get("name", "").strip().lower()
+        if State.objects.filter(name=name).exists():
+            messages.error(request, "State already exists!")
+        
         if country_id and name:
             country = get_object_or_404(Country, id=country_id)
+            print(country)
             State.objects.create(name=name, country=country)
+            messages.success(request, "State added successfully!")
         return redirect("state")
     return render(request, 'state.html')
 
@@ -107,6 +130,7 @@ def get_state_details(request):
             search = request.GET.get('q')
             get_edit = request.GET.get('get_edit')
             get_delete = request.GET.get('get_delete')
+            toggle_state_id = request.GET.get('toggle_state_id')
             if get_edit:
                 print("Edit is called",get_edit)
                 state = get_object_or_404( State, id = get_edit)
@@ -120,6 +144,14 @@ def get_state_details(request):
                     'state': state
                 }
                 return render(request, 'state/state_delete_form.html', context)
+            
+             # --- Toggle status request ---
+            if toggle_state_id:
+                state = get_object_or_404(Country, id=toggle_state_id)
+                state.status = not state.status
+                state.save()
+                html = render_to_string("state/state_status.html", {"state": state})
+                return HttpResponse(html)
             if search:
                 states = State.objects.filter(
                      Q(name__icontains=search) 
@@ -152,12 +184,14 @@ def edit_state(request, id):
             state.country = country
             state.name = name
             state.save()
+            messages.success(request, "State edited successfully!")
         return redirect("state")
 
 def delete_state(request, id):
     state = get_object_or_404(State, id=id)
     if request.method == "POST":
         state.delete()
+        messages.info(request, "state deleted successfully!")
         return redirect("state")
 
 def get_countries_ajax(request):
@@ -166,18 +200,21 @@ def get_countries_ajax(request):
     options = "".join([f'<option value="{c.id}">{c.name}</option>' for c in countries])
     return HttpResponse(options)
     
-
 # City view
 
 def city_view(request):
     if request.method == "POST":
         country_id = request.POST.get("country")
         state_id = request.POST.get("state")
-        name = request.POST.get("name")
-        if country_id and state_id and name:
-            country = get_object_or_404(Country, id=country_id)
-            state = get_object_or_404(State, id=state_id, country=country)
-            City.objects.create(name=name, country=country, state=state)
+        name = request.POST.get("name", "").strip().lower()
+        if City.objects.filter(name=name).exists():
+            messages.error(request, "City already exists!")
+        else:
+            if country_id and state_id and name:
+                country = get_object_or_404(Country, id=country_id)
+                state = get_object_or_404(State, id=state_id, country=country)
+                City.objects.create(name=name, country=country, state=state)
+                messages.success(request, "City added successfully!")
         return redirect("city")
     return render(request, "city.html")
 
@@ -188,7 +225,7 @@ def get_city_details(request):
             search = request.GET.get("q")
             get_edit = request.GET.get("get_edit")
             get_delete = request.GET.get("get_delete")
-
+            toggle_city_id = request.GET.get('toggle_city_id')
             if get_edit:
                 city = get_object_or_404(City, id=get_edit)
                 return render(request, "city/city_edit_form.html", {"city": city})
@@ -197,6 +234,14 @@ def get_city_details(request):
                 city = get_object_or_404(City, id=get_delete)
                 return render(request, "city/city_delete_form.html", {"city": city})
 
+            # --- Toggle status request ---
+            if toggle_city_id:
+                city = get_object_or_404(City, id=toggle_city_id)
+                city.status = not city.status
+                city.save()
+                html = render_to_string("city/city_status.html", {"city": city})
+                return HttpResponse(html)
+            
             if search:
                 cities = City.objects.filter(Q(name__icontains=search))
             else:
@@ -228,6 +273,7 @@ def edit_city(request, id):
             city.state = state
             city.name = name
             city.save()
+            messages.success(request, "City edited successfully!")
         return redirect("city")
 
 def delete_city(request, id):

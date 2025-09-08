@@ -1,0 +1,13 @@
+<td  id="status-{{ state.id }}">
+  <a href="#"
+     hx-get="{% url 'get_state_details' %}?toggle_state_id={{ state.id }}"
+     hx-target="#status-{{ state.id }}"
+     hx-swap="outerHTML"
+     class="text-decoration-none">
+    {% if state.status %}
+      <span class="badge bg-success">Active</span>
+    {% else %}
+      <span class="badge bg-danger">Deactive</span>
+    {% endif %}
+  </a>
+</td>
