@@ -11,9 +11,15 @@
     content: '*';
     color: red;
   }
-   .uppercase {
-  text-transform: uppercase;
-}
+
+  .uppercase {
+    text-transform: uppercase;
+  }
+
+  select:hover,
+  #pagination_div {
+    cursor: pointer;
+  }
 </style>
 {% endblock %}
 {% block content %}
@@ -28,8 +34,8 @@
     </button>
 
     <div class="search-box" style="max-width: 400px; width: 100%;">
-      <input type="text" class="form-control" placeholder="Search States..." name="q" hx-get="{% url 'get_state_details' %}"
-      hx-target="#state_data" >
+      <input type="text" class="form-control" placeholder="Search States..." name="q"
+        hx-get="{% url 'get_state_details' %}" hx-target="#state_data">
     </div>
   </div>
 
@@ -45,7 +51,8 @@
           <th>Operation</th>
         </tr>
       </thead>
-      <tbody id="state_data" hx-get="{% url 'get_state_details' %}" hx-target="this" hx-trigger="load once" hx-swap="innerHTML">
+      <tbody id="state_data" hx-get="{% url 'get_state_details' %}" hx-target="this" hx-trigger="load once"
+        hx-swap="innerHTML">
         <!-- list via htmx -->
       </tbody>
     </table>
@@ -55,26 +62,27 @@
   </div>
 
   <!-- Toast container -->
-<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
-  {% if messages %}
+  <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
+    {% if messages %}
     {% for message in messages %}
-      <div class="toast align-items-center text-white {% if message.tags == 'error' %} bg-danger {% elif message.tags == 'success' %} bg-success {% else %} bg-info {% endif %} border-0"
-           role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="3000">
-        <div class="d-flex">
-          <div class="toast-body">
-            {{ message }}
-          </div>
-          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-                  aria-label="Close"></button>
+    <div
+      class="toast align-items-center text-white {% if message.tags == 'error' %} bg-danger {% elif message.tags == 'success' %} bg-success {% else %} bg-info {% endif %} border-0"
+      role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="3000">
+      <div class="d-flex">
+        <div class="toast-body">
+          {{ message }}
         </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+          aria-label="Close"></button>
       </div>
+    </div>
     {% endfor %}
-  {% endif %}
-</div>
+    {% endif %}
+  </div>
 
   <!-- Add State Modal -->
   <div class="modal fade" id="addStateModal" tabindex="-1">
-    <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-dialog">
       <div class="modal-content rounded-3 shadow-lg">
         <div class="modal-header" style="background-color: #0c768a;">
           <h6 class="modal-title text-white">Add New State</h6>
@@ -85,19 +93,20 @@
           {% csrf_token %}
           <div class="modal-body py-3 px-4">
 
-            <div class="mb-3">
+            <!-- Country -->
+            <div class="mb-3 text-start">
               <label class="form-label">Country</label>
               <select class="form-select" id="countrySelect" name="country">
-                <option value="" disabled selected>-- Select Country --</option>
-                <!-- filled by ajax -->
+                <option value="">-- Select Country --</option>
               </select>
-              <small id="countryError" class="text-danger"></small>
+              <small id="countryError" class="text-danger d-block"></small>
             </div>
 
-            <div class="mb-3">
+            <!-- State -->
+            <div class="mb-3 text-start">
               <label class="form-label">State Name</label>
-              <input type="text" class="form-control" name="name" placeholder="Ex: Telengana" id="name">
-              <small id="nameError" class="text-danger"></small>
+              <input type="text" class="form-control" name="name" placeholder="Ex: Telangana" id="name">
+              <small id="nameError" class="text-danger d-block"></small>
             </div>
 
           </div>
@@ -109,17 +118,8 @@
       </div>
     </div>
   </div>
+  <!-- End Add State Modal -->
 </div>
-
-<script>
-function loadCountries(target) {
-  fetch("{% url 'get_countries_ajax' %}")
-    .then(response => response.text())
-    .then(data => {
-      document.querySelector(target).innerHTML = data;
-    });
-}
-</script>
 
 {% endblock %}
 
@@ -134,79 +134,172 @@ function loadCountries(target) {
     })
   });
 
-
-$("#stateValidationForm").validate({
-  ignore: [],   
-  errorElement: 'label',
-  rules: {
-    name: {
-      required: true,
-      minlength: 4,
-      maxlength: 30
-    },
-   
-  },
-  messages: {
-    name: {
-      required: "Please enter state name!",
-      minlength: "Please give minimum 4 characters",
-      maxlength: "Max it should be 30 characters"
-    },
-   
-  },
-  errorPlacement: function (error, element) {
-    var fieldName = element.attr("name");
-    var $small = $("#" + fieldName + "Error");
-    if ($small.length) {
-      $small.text(error.text());
-    } else {
-      error.insertAfter(element);
+  function loadCountries(target) {
+    // only load if not already loaded
+    if (!document.querySelector(target).dataset.loaded) {
+      fetch("{% url 'get_countries_ajax' %}")
+        .then(response => response.text())
+        .then(data => {
+          document.querySelector(target).innerHTML = '<option value="">-- Select Country --</option>' + data;
+          document.querySelector(target).dataset.loaded = "true"; // mark as loaded
+        });
     }
-  },
-  submitHandler: function (form) {
-    form.submit();
   }
-});
 
-// state edit form validation 
-  document.body.addEventListener("htmx:afterSwap", function(evt) {
-  // Check if the swap was into an edit modal
-  if (evt.detail.target.id.startsWith("stateEdit_form-")) {
-    const form = evt.detail.target.querySelector("form");
-    if (form) {
-      $(form).validate({
-        errorElement: 'label',
-        rules: {
-          name: {
-            required: true,
-            minlength: 2,
-            maxlength: 30
-          }
+
+  document.addEventListener("DOMContentLoaded", function () {
+    // trigger on click
+    document.getElementById("countrySelect").addEventListener("focus", function () {
+      loadCountries("#countrySelect");
+    });
+
+    // validation for add state modal  
+    $("#stateValidationForm").validate({
+      ignore: [],
+      errorElement: 'label',
+      rules: {
+        name: {
+          required: true,
+          minlength: 4,
+          maxlength: 30
         },
-        messages: {
-          name: {
-            required: "Please enter state!",
-            minlength: "Please give minimum 2 characters",
-            maxlength: "Max it should be 30 characters"
-          }
-        },
-        errorPlacement: function (error, element) {
-          var fieldName = element.attr("name");
-          var $small = $(form).find(`#${fieldName}Error-${form.id.split('-')[1]}`);
-          if ($small.length) {
-            $small.text(error.text());
-          } else {
-            error.insertAfter(element);
-          }
-        },
-        submitHandler: function (form) {
-          form.submit();
+        country: {
+          required: true
         }
-      });
+
+      },
+      messages: {
+        name: {
+          required: "Please enter state name!",
+          minlength: "Please give minimum 4 characters",
+          maxlength: "Max it should be 30 characters"
+        },
+        country: {
+          required: "Please select a country name.."
+        }
+      },
+      errorPlacement: function (error, element) {
+        var fieldName = element.attr("name");
+        var $small = $("#" + fieldName + "Error");
+        if ($small.length) {
+          $small.text(error.text());
+        } else {
+          error.insertAfter(element);
+        }
+      },
+      success: function (label, element) {
+        var fieldName = $(element).attr("name");
+        $("#" + fieldName + "Error").text(""); // clear error when valid
+      },
+      submitHandler: function (form) {
+        form.submit();
+      }
+    });
+
+  });
+
+// helper to read csrf token from cookie (keep in your file)
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== "") {
+    const cookies = document.cookie.split(";");
+    for (let i = 0; i < cookies.length; i++) {
+      const cookie = cookies[i].trim();
+      if (cookie.substring(0, name.length + 1) === (name + "=")) {
+        cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+        break;
+      }
     }
   }
-});
+  return cookieValue;
+}
+const csrftoken = getCookie("csrftoken");
 
+// robust validation for edit-state partials loaded by HTMX
+document.body.addEventListener("htmx:afterSwap", function (evt) {
+  if (!evt.detail || !evt.detail.target) return;
+  if (!evt.detail.target.id || !evt.detail.target.id.startsWith("stateEdit_form-")) return;
+
+  const form = evt.detail.target.querySelector("form");
+  if (!form) return;
+
+  const idSuffix = form.id.split("-")[1]; // editstateForm-21 -> "21"
+
+  $(form).validate({
+    errorElement: 'label',
+    rules: {
+      name: {
+        required: true,
+        minlength: 2,
+        maxlength: 30,
+        remote: {
+          url: "{% url 'ajax_check_state_unique' %}",
+          type: "post",
+          data: {
+            name: function() { return $(form).find('input[name="name"]').val(); },
+            country: function() { return $(form).find('select[name="country"]').val(); },
+            id: function() { return idSuffix; }
+          },
+          beforeSend: function(xhr) {
+            xhr.setRequestHeader("X-CSRFToken", csrftoken);
+          },
+          // dataFilter converts JSON -> the string jQuery Validate expects:
+          dataFilter: function(response) {
+            // response is JSON string from server
+            try {
+              var json = JSON.parse(response);
+            } catch (e) {
+              // if parse fails, allow validation (avoid blocking the form)
+              return 'true';
+            }
+            if (json.valid === true) {
+              return 'true'; // jQuery Validate treats string 'true' as valid
+            }
+            // Return a JSON-stringified message so Validate displays it properly
+            // (this pattern is compatible with Validate's internals)
+            return JSON.stringify(json.message || 'This state already exists.');
+          }
+        }
+      },
+      country: { required: true }
+    },
+    messages: {
+      name: {
+        required: "Please enter state!",
+        minlength: "Please give minimum 2 characters",
+        maxlength: "Max it should be 30 characters",
+        remote: "This state already exists for the selected country."
+      },
+      country: { required: "Please select a country." }
+    },
+    errorPlacement: function (error, element) {
+      var fieldName = element.attr("name");
+      var $small = $(form).find(`#${fieldName}Error-${idSuffix}`);
+      if ($small.length) {
+        // use text() to place the message
+        $small.text(error.text() || error.html());
+      } else {
+        error.insertAfter(element);
+      }
+    },
+    success: function (label, element) {
+      var fieldName = $(element).attr("name");
+      $(form).find(`#${fieldName}Error-${idSuffix}`).text("");
+    },
+    submitHandler: function (f) {
+      f.submit();
+    }
+  });
+
+  // revalidate the name when country changes or name changes (remote depends on country)
+  $(form).find('select[name="country"]').on('change', function() {
+    $(form).find('input[name="name"]').valid(); // triggers remote recheck
+    $(form).find(`#countryError-${idSuffix}`).text('');
+  });
+  $(form).find('input[name="name"]').on('blur input', function() {
+    $(form).find('input[name="name"]').valid();
+  });
+});
 </script>
 <script src="{% static 'assets/js/custom_validation.js' %}"></script>
 {% endblock %}

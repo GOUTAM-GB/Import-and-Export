@@ -19,4 +19,7 @@ urlpatterns = [
     path('city/details/',get_city_details, name='get_city_details'),
     path('city/edit/<int:id>/', edit_city, name='edit_city'),
     path('city/delete/<int:id>/',delete_city, name='delete_city'),
+    
+    path("ajax/check-state-unique/", ajax_check_state_unique, name="ajax_check_state_unique"),
+    path("validate_city_edit/", validate_city_edit, name="validate_city_edit"),
 ]

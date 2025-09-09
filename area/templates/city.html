@@ -11,9 +11,13 @@
     content: '*';
     color: red;
   }
-   .uppercase {
-  text-transform: uppercase;
-}
+
+  .uppercase {
+    text-transform: uppercase;
+  }
+   select:hover, #pagination_div{
+  cursor: pointer;
+ }
 </style>
 {% endblock %}
 {% block content %}
@@ -22,9 +26,8 @@
 
   <!-- Top bar -->
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <button class="btn text-white" style="background-color: #0c768a;"
-      data-bs-toggle="modal" data-bs-target="#addCityModal"
-      onclick="loadCountries('#cityCountrySelect')">
+    <button class="btn text-white" style="background-color: #0c768a;" data-bs-toggle="modal"
+      data-bs-target="#addCityModal" onclick="loadCountries('#cityCountrySelect')">
       + Add City
     </button>
 
@@ -47,10 +50,7 @@
           <th>Operation</th>
         </tr>
       </thead>
-      <tbody id="city_data"
-        hx-get="{% url 'get_city_details' %}" 
-        hx-target="this" 
-        hx-trigger="load once" 
+      <tbody id="city_data" hx-get="{% url 'get_city_details' %}" hx-target="this" hx-trigger="load once"
         hx-swap="innerHTML">
         <!-- list via htmx -->
       </tbody>
@@ -61,26 +61,27 @@
   </div>
 
   <!-- Toast container -->
-<div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
-  {% if messages %}
+  <div class="toast-container position-fixed top-0 end-0 p-3" style="z-index: 1100;">
+    {% if messages %}
     {% for message in messages %}
-      <div class="toast align-items-center text-white {% if message.tags == 'error' %} bg-danger {% elif message.tags == 'success' %} bg-success {% else %} bg-info {% endif %} border-0"
-           role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="3000">
-        <div class="d-flex">
-          <div class="toast-body">
-            {{ message }}
-          </div>
-          <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
-                  aria-label="Close"></button>
+    <div
+      class="toast align-items-center text-white {% if message.tags == 'error' %} bg-danger {% elif message.tags == 'success' %} bg-success {% else %} bg-info {% endif %} border-0"
+      role="alert" aria-live="assertive" aria-atomic="true" data-bs-autohide="true" data-bs-delay="3000">
+      <div class="d-flex">
+        <div class="toast-body">
+          {{ message }}
         </div>
+        <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast"
+          aria-label="Close"></button>
       </div>
+    </div>
     {% endfor %}
-  {% endif %}
-</div>
+    {% endif %}
+  </div>
 
   <!-- Add City Modal -->
   <div class="modal fade" id="addCityModal" tabindex="-1">
-    <div class="modal-dialog modal-md modal-dialog-centered">
+    <div class="modal-dialog">
       <div class="modal-content rounded-3 shadow-lg">
         <div class="modal-header" style="background-color: #0c768a;">
           <h6 class="modal-title text-white">Add New City</h6>
@@ -91,19 +92,21 @@
           {% csrf_token %}
           <div class="modal-body py-3 px-4">
 
-            <div class="mb-3">
+            <div class="mb-3 text-start">
               <label class="form-label">Country</label>
               <select class="form-select" id="cityCountrySelect" name="country"
                 onchange="loadStates(this.value, '#cityStateSelect')">
-                <!-- loaded via ajax -->
+                <option value="">-- Select Country --</option>
               </select>
+              <small id="countryError" class="text-danger d-block"></small>
+              <small id="countryError" class="text-danger d-block"></small>
             </div>
 
             <div class="mb-3">
               <label class="form-label">State</label>
               <select class="form-select" id="cityStateSelect" name="state">
                 <!-- loaded via ajax -->
-              </select> 
+              </select>
               <small id="stateError" class="text-danger"></small>
             </div>
 
@@ -125,34 +128,12 @@
 
 </div>
 
-<script>
-function loadCountries(target, selectedId=null) {
-  fetch("{% url 'get_countries_ajax' %}")
-    .then(response => response.text())
-    .then(data => {
-      const select = document.querySelector(target);
-      select.innerHTML = data;
-      if (selectedId) select.value = selectedId;
-      select.dispatchEvent(new Event("change")); // trigger state load
-    });
-}
-
-function loadStates(countryId, target, selectedId=null) {
-  if (!countryId) return;
-  fetch(`/get_states_ajax/${countryId}/`)   // <-- use underscore not hyphen
-    .then(response => response.text())
-    .then(data => {
-      const select = document.querySelector(target);
-      select.innerHTML = '<option value="">Select State</option>' + data;
-      if (selectedId) select.value = selectedId;
-    });
-}
-</script>
 
 {% endblock %}
 
 {% block script %}
 <script>
+  // load toast message 
   document.addEventListener("DOMContentLoaded", function () {
     var toastElList = [].slice.call(document.querySelectorAll('.toast'))
     toastElList.map(function (toastEl) {
@@ -161,81 +142,152 @@ function loadStates(countryId, target, selectedId=null) {
     })
   });
 
-    // city validation 
-  $("#cityValidationForm").validate({
-    errorElement: 'label',
-    rules: {
-      name: {
-        required: true,
-        minlength: 4,
-        maxlength: 30
+  // Load country
+function loadCountries(target, selectedId = null, stateTarget = null, selectedStateId = null) {
+  const select = document.querySelector(target);
+  fetch("{% url 'get_countries_ajax' %}")
+    .then(response => response.text())
+    .then(data => {
+      select.innerHTML = '<option value="">-- Select Country --</option>' + data;
+      if (selectedId) {
+        select.value = selectedId;
+        // If editing and stateTarget is provided, load states right away
+        if (stateTarget) {
+          loadStates(selectedId, stateTarget, selectedStateId);
+        }
+      }
+    });
+}
+  function loadStates(countryId, target, selectedId=null) {
+  if (!countryId) {
+    document.querySelector(target).innerHTML = '<option value="">-- Select State --</option>';
+    return;
+  }
+  fetch(`/get_states_ajax/${countryId}/`)
+    .then(response => response.text())
+    .then(data => {
+      const select = document.querySelector(target);
+      select.innerHTML = '<option value="">-- Select State --</option>' + data;
+      if (selectedId) select.value = selectedId;
+    });
+}
+
+
+  document.addEventListener("DOMContentLoaded", function () {
+    // trigger load on focus
+    document.getElementById("cityCountrySelect").addEventListener("focus", function () {
+      loadCountries("#cityCountrySelect");
+    });
+
+    // add city validation 
+    $("#cityValidationForm").validate({
+      errorElement: 'label',
+      rules: {
+        name: {
+          required: true,
+          minlength: 4,
+          maxlength: 30
+        },
+        country: {
+          required: true
+        },
+        state: {
+          required: true
+        }
       },
-    
-      state:{
-        required: true
-      }
-    },
-    messages: {
-      name: {
-        required: "Please enter City  name!",
-        minlength: "Please give minimum 4 characters",
-        maxlength: "Max it should be 30 characters"
+      messages: {
+        name: {
+          required: "Please enter City  name!",
+          minlength: "Please give minimum 4 characters",
+          maxlength: "Max it should be 30 characters"
+        },
+        country: {
+          required: "Please select a country."
+        },
+
+        state: {
+          required: "Please select a state name."
+        }
       },
-      
-      state:{
-        required:"Please select a state name."
+      errorPlacement: function (error, element) {
+        var fieldName = element.attr("name");
+        var $small = $("#" + fieldName + "Error");
+        if ($small.length) {
+          $small.text(error.text());
+        } else {
+          error.insertAfter(element);
+        }
+      },
+      success: function (label, element) {
+        var fieldName = $(element).attr("name");
+        $("#" + fieldName + "Error").text(""); // clear error
+      },
+      submitHandler: function (form) {
+        form.submit();
       }
-    },
-    errorPlacement: function (error, element) {
-      var fieldName = element.attr("name");
-      var $small = $("#" + fieldName + "Error");
-      if ($small.length) {
-        $small.text(error.text());
-      } else {
-        error.insertAfter(element);
-      }
-    },
-    submitHandler: function (form) {
-      form.submit();
-    }
+    });
   });
 
   // city edit form validation 
-  document.body.addEventListener("htmx:afterSwap", function(evt) {
-  // Check if the swap was into an edit modal
-  if (evt.detail.target.id.startsWith("cityEdit_form-")) {
-    const form = evt.detail.target.querySelector("form");
-    if (form) {
-      $(form).validate({
-        errorElement: 'label',
-        rules: {
-          name: {
-            required: true,
-            minlength: 2,
-            maxlength: 30
+document.body.addEventListener("htmx:afterSwap", function (evt) {
+  const form = evt.detail.target.querySelector("form[id^='editcityForm-']");
+  if (form) {
+    const formId = form.id.split('-')[1]; // extract city.id
+
+    $(form).validate({
+      errorElement: 'label',
+      rules: {
+        name: {
+          required: true,
+          minlength: 2,
+          maxlength: 30,
+          remote: {
+            url: "{% url 'validate_city_edit' %}",
+            type: "get",
+            data: {
+              country: function () {
+                return $(form).find("[name='country']").val();
+              },
+              state: function () {
+                return $(form).find("[name='state']").val();
+              },
+              name: function () {
+                return $(form).find("[name='name']").val();
+              },
+              city_id: formId
+            }
           }
         },
-        messages: {
-          name: {
-            required: "Please enter city!",
-            minlength: "Please give minimum 2 characters",
-            maxlength: "Max it should be 30 characters"
-          }
+        country: { required: true },
+        state: { required: true }
+      },
+      messages: {
+        name: {
+          required: "Please enter city!",
+          minlength: "Please give minimum 2 characters",
+          maxlength: "Max it should be 30 characters",
+          remote: "This city already exists for the selected country and state."
         },
-        errorPlacement: function (error, element) {
-          var fieldName = element.attr("name");
-          var $small = $(form).find(`#${fieldName}Error-${form.id.split('-')[1]}`);
-          if ($small.length) {
-            $small.text(error.text());
-          } else {
-            error.insertAfter(element);
-          }
-        },
-        submitHandler: function (form) {
-          form.submit();
+        country: { required: "Please select a country." },
+        state: { required: "Please select a state." }
+      },
+      errorPlacement: function (error, element) {
+        var fieldName = element.attr("name");
+        var $small = $(form).find(`#${fieldName}Error-${formId}`);
+        if ($small.length) {
+          $small.text(error.text());
+        } else {
+          error.insertAfter(element);
         }
-      });
-    }
+      },
+      success: function (label, element) {
+        var fieldName = $(element).attr("name");
+        $(form).find(`#${fieldName}Error-${formId}`).text(""); // clear error
+      },
+      submitHandler: function (form) {
+        form.submit();
+      }
+    });
   }
 });
 

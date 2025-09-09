@@ -1,7 +1,7 @@
 {% if states %}
 {% for state in states %}
 <tr>
-  <td>{{ forloop.counter }}</td>
+  <td>{{ forloop.counter0|add:states.start_index }}</td>
   <td class="text-start uppercase">{{ state.country.name }}</td>
   <td class="text-start uppercase">{{ state.name }}</td>
   <td>{{ state.created_at|date:"d M Y H:i" }}</td>
@@ -27,7 +27,7 @@
 
 <!-- Edit Modal -->
 <div id="stateEditModal-{{ state.id }}" class="modal fade">
-  <div class="modal-dialog modal-md modal-dialog-centered">
+  <div class="modal-dialog">
     <div class="modal-content" id="stateEdit_form-{{ state.id }}">
       <!-- loaded via htmx -->
     </div>
@@ -36,7 +36,7 @@
 
 <!-- Delete Modal -->
 <div id="stateDeleteModal-{{ state.id }}" class="modal fade">
-  <div class="modal-dialog modal-sm modal-dialog-centered">
+  <div class="modal-dialog">
     <div class="modal-content" id="stateDelete_form-{{ state.id }}">
       <!-- loaded via htmx -->
     </div>

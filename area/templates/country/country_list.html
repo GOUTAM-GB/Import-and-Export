@@ -1,7 +1,7 @@
 {% if countries %}
 {% for country in countries %}
 <tr style="height:25px;">
-  <th scope="row">{{ forloop.counter }}</th>
+  <td>{{ forloop.counter0|add:countries.start_index }}</td>
   <td class="text-start uppercase">{{ country.name }}</td>
   <td >{{ country.created_at | date:"d M Y H:i" }}</td>
 
@@ -27,7 +27,7 @@
 
 <!-- Edit Modal -->
 <div id="countryEditModal-{{ country.id }}" class="modal fade" tabindex="-1">
-  <div class="modal-dialog modal-dialog-centered modal-md">
+  <div class="modal-dialog">
     <div class="modal-content rounded-3 shadow-lg" id="countryEdit_form-{{ country.id }}">
       <!-- Loaded via HTMX -->
     </div>
@@ -36,7 +36,7 @@
 
 <!-- Delete Modal -->
 <div class="modal fade" id="countryDeleteModal-{{country.id}}" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-sm">
+  <div class="modal-dialog">
     <div class="modal-content rounded-3 shadow-lg" id="countryDelete_form-{{ country.id }}">
       <!-- Loaded via HTMX -->
     </div>

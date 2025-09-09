@@ -1,7 +1,7 @@
 {% if cities %}
 {% for city in cities %}
 <tr>
-  <td>{{ forloop.counter }}</td>
+  <td>{{ forloop.counter0|add:cities.start_index }}</td>
   <td class="text-start uppercase">{{ city.country.name }}</td>
   <td class="text-start uppercase">{{ city.state.name }}</td>
   <td class="text-start uppercase">{{ city.name }}</td>
@@ -29,7 +29,7 @@
 
 <!-- Edit Modal -->
 <div id="cityEditModal-{{ city.id }}" class="modal fade">
-  <div class="modal-dialog modal-md modal-dialog-centered">
+  <div class="modal-dialog ">
     <div class="modal-content" id="cityEdit_form-{{ city.id }}">
       <!-- loaded via htmx -->
     </div>
@@ -37,9 +37,9 @@
 </div>
 
 <!-- Delete Modal -->
-<div id="cityDeleteModal-{{ city.id }}" class="modal fade">
-  <div class="modal-dialog modal-sm modal-dialog-centered">
-    <div class="modal-content" id="cityDelete_form-{{ city.id }}">
+<div id="cityDeleteModal-{{ city.id }}" class="modal fade" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content rounded-3 shadow-lg" id="cityDelete_form-{{ city.id }}">
       <!-- loaded via htmx -->
     </div>
   </div>

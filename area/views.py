@@ -6,6 +6,7 @@ from django.core.paginator import Paginator,PageNotAnInteger,EmptyPage
 from django.db.models import Q
 from django.template.loader import render_to_string
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
+from django.views.decorators.http import require_POST
 
 # Create your views here.
 def home(request):
@@ -95,7 +96,7 @@ def delete_country(request, id):
 
         if request.method == "POST":
             country.delete()   # ✅ fixed
-            messages.info(request, "country deleted successfully!")
+            messages.success(request, "country deleted successfully!")
             return redirect('country')
 
     except Exception as e:
@@ -179,6 +180,10 @@ def edit_state(request, id):
     if request.method == "POST":
         country_id = request.POST.get("country")
         name = request.POST.get("name")
+         # check duplicate (exclude current record)
+        if State.objects.filter(country_id=country_id, name__iexact=name).exclude(id=state.id).exists():
+            messages.error(request, "State already exists for the selected country.")
+            return redirect("state")
         if country_id and name:
             country = get_object_or_404(Country, id=country_id)
             state.country = country
@@ -191,7 +196,7 @@ def delete_state(request, id):
     state = get_object_or_404(State, id=id)
     if request.method == "POST":
         state.delete()
-        messages.info(request, "state deleted successfully!")
+        messages.success(request, "state deleted successfully!")
         return redirect("state")
 
 def get_countries_ajax(request):
@@ -287,3 +292,44 @@ def get_states_ajax(request, country_id):
     states = State.objects.filter(country_id=country_id, status=True).order_by("name")
     options = "".join([f'<option value="{s.id}">{s.name}</option>' for s in states])
     return HttpResponse(options)
+
+
+@require_POST
+def ajax_check_state_unique(request):
+    """
+    POST: name, country, id (optional - current record id)
+    Returns JSON: { valid: true } or { valid: false, message: "..." }
+    """
+    name = request.POST.get("name", "").strip()
+    country_id = request.POST.get("country")
+    current_id = request.POST.get("id")
+
+    # if missing inputs, treat as valid so 'required' handles empties client-side
+    if not name or not country_id:
+        return JsonResponse({"valid": True})
+
+    qs = State.objects.filter(country_id=country_id, name__iexact=name)
+    if current_id:
+        qs = qs.exclude(id=current_id)
+
+    if qs.exists():
+        return JsonResponse({
+            "valid": False,
+            "message": "This state already exists for the selected country."
+        })
+    return JsonResponse({"valid": True})
+
+
+def validate_city_edit(request):
+    country_id = request.GET.get("country")
+    state_id = request.GET.get("state")
+    name = request.GET.get("name", "").strip()
+    city_id = request.GET.get("city_id")  # current editing city
+
+    exists = City.objects.filter(
+        country_id=country_id,
+        state_id=state_id,
+        name__iexact=name
+    ).exclude(id=city_id).exists()
+
+    return JsonResponse(not exists, safe=False)  
