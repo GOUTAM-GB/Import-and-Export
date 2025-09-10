@@ -22,4 +22,4 @@ urlpatterns = [
     
     path("ajax/check-state-unique/", ajax_check_state_unique, name="ajax_check_state_unique"),
     path("validate_city_edit/", validate_city_edit, name="validate_city_edit"),
-]
+path("export/<str:model_name>/", export_records, name="export_records"),]

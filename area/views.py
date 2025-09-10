@@ -7,6 +7,13 @@ from django.db.models import Q
 from django.template.loader import render_to_string
 from django.http import HttpResponse, JsonResponse, HttpResponseBadRequest
 from django.views.decorators.http import require_POST
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.styles import getSampleStyleSheet
+import csv
+from xhtml2pdf import pisa   # for converting HTML → PDF
+import io
+
+from django.apps import apps
 
 # Create your views here.
 def home(request):
@@ -333,3 +340,71 @@ def validate_city_edit(request):
     ).exclude(id=city_id).exists()
 
     return JsonResponse(not exists, safe=False)  
+
+# Export view 
+def export_records(request, model_name):
+    # Dynamically get the model (Country, State, City)
+    Model = apps.get_model('area', model_name)
+
+    from_date = request.GET.get("from_date")
+    to_date = request.GET.get("to_date")
+    export_format = request.GET.get("format")  # new dropdown field
+
+    queryset = Model.objects.all().order_by("-id")
+
+    # filter by date range if both provided
+    if from_date and to_date:
+        queryset = queryset.filter(created_at__date__range=[from_date, to_date])
+
+    # 🔹 If no records found → show error and go back
+    if not queryset.exists():
+        messages.error(request, "No records present in this date range.")
+        return redirect(request.META.get("HTTP_REFERER", f"/{model_name.lower()}/"))
+
+    # ✅ CSV Export
+    if export_format == "csv":
+        response = HttpResponse(content_type="text/csv")
+        response['Content-Disposition'] = f'attachment; filename="{model_name.lower()}_records.csv"'
+        writer = csv.writer(response)
+
+        # headers
+        fields = [f.name for f in Model._meta.fields if not f.primary_key]
+        writer.writerow(["Sl. No."] + fields)
+
+        # rows
+        for idx, obj in enumerate(queryset, start=1):
+            row = [getattr(obj, field) for field in fields]
+            writer.writerow([idx] + row)
+
+        return response
+
+    # ✅ PDF Export using HTML template
+    elif export_format == "pdf":
+        # Select template based on model
+        template_name = f"{model_name.lower()}/{model_name.lower()}_pdf.html"
+
+        # Prepare context
+        fields = [field.name for field in Model._meta.fields]
+        context = {
+            "model_name": model_name,
+            "fields": fields,
+            "records": queryset,
+        }
+
+        # Render HTML template
+        html = render_to_string(template_name, context)
+
+        # Convert HTML to PDF
+        response = HttpResponse(content_type="application/pdf")
+        response['Content-Disposition'] = f'attachment; filename="{model_name.lower()}_records.pdf"'
+
+        pisa_status = pisa.CreatePDF(html, dest=response)
+
+        if pisa_status.err:
+            return HttpResponse("Error generating PDF", status=500)
+
+        return response
+
+    else:
+        messages.error(request, "Please select a valid export format.")
+        return redirect(request.META.get("HTTP_REFERER", f"/{model_name.lower()}/"))
